@@ -42,4 +42,14 @@ class ClassFinderTest extends TestCase
             $finder->pathToClass(__DIR__ . '/../../src/ClassFinder.php')
         );
     }
+
+    public function testClassesIn()
+    {
+        $finder = ClassFinder::usingAutoload();
+
+        $this->assertCount(
+            3,
+            $finder->classesIn(__DIR__ . '/Classes')
+        );
+    }
 }

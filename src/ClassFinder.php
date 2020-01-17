@@ -7,6 +7,10 @@ use Illuminate\Support\Str;
 use InvalidArgumentException;
 use RuntimeException;
 use SplFileInfo;
+use Generator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RegexIterator;
 
 class ClassFinder
 {
@@ -90,5 +94,32 @@ class ClassFinder
         }
 
         throw new RuntimeException("unable to find a suitable class for path '{$path}'");
+    }
+
+    public function classesIn($path): Generator
+    {
+        if ($path instanceof SplFileInfo) {
+            $path = $path->getPathname();
+        }
+
+        if (! is_string($path)) {
+            throw new InvalidArgumentException("\$path is not a string");
+        }
+
+        if (! is_dir($path)) {
+            throw new RuntimeException("{$path} is not a directory ");
+        }
+
+        $dir   = new RecursiveDirectoryIterator($path);
+        $it    = new RecursiveIteratorIterator($dir);
+        $files = new RegexIterator($it, '/\.php$/', RegexIterator::MATCH);
+
+        foreach ($files as $file) {
+            try {
+                yield $this->pathToClass($file->getPathName());
+            } catch (RuntimeException $e) {
+                continue;
+            }
+        }
     }
 }
